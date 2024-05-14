@@ -67,7 +67,7 @@ jobs:
         tag: ${{ github.ref_name }}
       run: |
           gh release create "$tag" \
-              --repo="$GITHUB_REPOSITORY" \
+              --repo="${{ github.workspace }}/build/compose/binaries/main/exe/*exe" \
               --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
               --generate-notes
     # - name: Checkout
