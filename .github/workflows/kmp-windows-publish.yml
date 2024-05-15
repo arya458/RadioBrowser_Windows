@@ -9,8 +9,9 @@ name: KMMPublish
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: ["master"]
+    # tags:
+    #   - "v*"
 
 jobs:
   tagged-release:
