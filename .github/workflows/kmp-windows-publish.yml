@@ -45,5 +45,5 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            ${{ github.workspace }}/composeApp/build/compose/binaries/main/exe/*.exe
+            ${{ github.workspace }}/composeApp/build/compose/binaries/main/exe/RadioBrowser-1.0.1.exe
 
