@@ -68,5 +68,5 @@ jobs:
           prerelease: true
           title: "Development Build"
           files: |
-            *.exe
+            ${{ github.workspace }}/build/compose/binaries/main/exe/*.exe
 
