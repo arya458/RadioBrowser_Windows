@@ -9,7 +9,8 @@ kotlin {
     jvm("desktop")
     sourceSets {
         val desktopMain by getting
-        
+        val koin_version = "3.2.0"
+
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -17,8 +18,15 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation( "de.sfuhrm:radiobrowser4j:3.0.0")
+            implementation("de.sfuhrm:radiobrowser4j:3.0.0")
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
+
+            implementation("io.insert-koin:koin-core:$koin_version")
+//            implementation("io.insert-koin:koin-core-coroutines:$koin_version")
+//            implementation("io.insert-koin:koin-compose:$koin_version")
+            implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
+
+
         }
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)

@@ -1,5 +1,3 @@
-import Player.PlayerImpl
-import Radio.RadioImpl
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -12,47 +10,34 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.darkrockstudios.libraries.mpfilepicker.FilePicker
-import de.sfuhrm.radiobrowser4j.*
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
+import de.sfuhrm.radiobrowser4j.Station
+import org.koin.java.KoinJavaComponent
+import org.koin.java.KoinJavaComponent.getKoin
+import player.domain.repository.PlayerRepository
+import player.presentation.compose.SetupPlayer
+import player.presentation.viewmodel.PlayerViewModel
+import player.util.PlayerState
+import radio.data.repository.RadioImpl
 import java.io.File
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
-@Preview
-fun App() {
+fun App(player: PlayerViewModel = getKoin().get()) {
     MaterialTheme {
 
-        val playerDir: MutableState<File?> = remember { mutableStateOf(null) }
-        val showPicker = remember { mutableStateOf(false) }
+
+
         val lazyState = rememberLazyGridState()
+        val playerState  by player.playerState.collectAsState()
 
-        FilePicker(
-            show = showPicker.value, fileExtensions = listOf("exe"), title = "mpc-hc64"
-        ) { platformFile ->
-            if (platformFile != null) {
-                playerDir.value = File(platformFile.path)
-            }
-            showPicker.value = false
-        }
+
+
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            when (playerDir.value) {
-                null -> {
-                    Column(
-                        Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
+            when (playerState) {
 
-                        Text("Please Download And Select K-Lite Codec exe")
-                        Button({
-                            showPicker.value = true
-                        }) {
-                            Text("Select")
-                        }
+                is PlayerState.Empty -> {
 
-                    }
+                    SetupPlayer()
+
                 }
 
                 else -> {
@@ -63,8 +48,6 @@ fun App() {
                             radioList.add(it)
                         }
                     }
-                    val player = PlayerImpl(playerDir.value!!)
-
 
                     LazyVerticalGrid(
                         modifier = Modifier.padding(10.dp).fillMaxSize(),
@@ -73,7 +56,7 @@ fun App() {
                     ) {
                         items(radioList) {
                             Card(modifier = Modifier.padding(10.dp).size(100.dp).clickable {
-                                player.play(it.url)
+                                player.play(it)
                             }, backgroundColor = MaterialTheme.colors.surface, elevation = 10.dp) {
 
                                 Column(

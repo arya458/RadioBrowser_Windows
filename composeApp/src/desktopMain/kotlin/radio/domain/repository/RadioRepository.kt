@@ -1,9 +1,6 @@
-package Radio
+package radio.domain.repository
 
-import de.sfuhrm.radiobrowser4j.RadioBrowser
 import de.sfuhrm.radiobrowser4j.Station
-import java.util.*
-import java.util.stream.Stream
 
 interface RadioRepository {
 

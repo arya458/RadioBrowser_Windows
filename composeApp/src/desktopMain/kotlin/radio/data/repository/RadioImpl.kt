@@ -1,5 +1,6 @@
-package Radio
+package radio.data.repository
 
+import radio.domain.repository.RadioRepository
 import de.sfuhrm.radiobrowser4j.ConnectionParams
 import de.sfuhrm.radiobrowser4j.EndpointDiscovery
 import de.sfuhrm.radiobrowser4j.RadioBrowser
