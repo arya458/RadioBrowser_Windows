@@ -66,9 +66,9 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
       run: |
-          gh release create "$tag" \
+          gh release create "v1.0.0" \
               --repo="${{ github.workspace }}/build/compose/binaries/main/exe/*exe" \
-              --title="${GITHUB_REPOSITORY#*/} ${tag#v}" \
+              --title="${GITHUB_REPOSITORY#*/} v1.0.0" \
               --generate-notes
     # - name: Checkout
     #   uses: actions/checkout@v4
