@@ -48,7 +48,9 @@ class PlayerImpl: PlayerRepository {
 
 
     override fun play(link: String): Process? {
-        return runtime.exec("${playerDir?.path} $link")
+//        return runtime.exec("${playerDir?.path} $link")
+        return runtime.exec("${playerDir?.path} $link /slave \"hWnd\" /nocrashreporter")
+
     }
 
 

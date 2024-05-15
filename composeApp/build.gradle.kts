@@ -22,6 +22,8 @@ kotlin {
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
 
             implementation("io.insert-koin:koin-core:$koin_version")
+            api("io.github.qdsfdhvh:image-loader:1.7.8")
+            api("io.github.qdsfdhvh:image-loader-extension-moko-resources:1.7.8")
 //            implementation("io.insert-koin:koin-core-coroutines:$koin_version")
 //            implementation("io.insert-koin:koin-compose:$koin_version")
             implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
@@ -46,7 +48,7 @@ compose.desktop {
             }
             includeAllModules = true
             packageName = "RadioBrowser"
-            packageVersion = "1.0.0"
+            packageVersion = "1.0.1-alpha"
         }
     }
 }

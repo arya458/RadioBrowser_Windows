@@ -45,9 +45,9 @@ class PlayerViewModel(private val player: PlayerRepository = KoinJavaComponent.g
     }
 
     fun play(station : Station) {
-//        if (playerScope != null) {
-//            lastProcess?.destroyForcibly()?.destroy()
-//        }
+        if (playerScope != null) {
+            lastProcess?.destroyForcibly()?.destroy()
+        }
         playerScope = scope.launch {
 
             flow<PlayerReadyState<Station>> {

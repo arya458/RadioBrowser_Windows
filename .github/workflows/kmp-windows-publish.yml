@@ -61,24 +61,13 @@ jobs:
     - name: Assemble The Project
       run: ./gradlew packageExe
 
-#    - name: Publish
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        tag: ${{ github.ref_name }}
-#      run: |
-#          gh release create "v1.0.0" \
-#              --repo="${{ github.workspace }}/build/compose/binaries/main/exe/*exe" \
-#              --title="${GITHUB_REPOSITORY#*/} v1.0.0" \
-#              --generate-notes
-#     - name: Checkout
-#       uses: actions/checkout@v4
-#    - name: Setup Pages
-#      uses: actions/configure-pages@v5
-#    - name: Upload artifact
-#      uses: actions/upload-pages-artifact@v3
-#      with:
-#        path: '${{ github.workspace }}/build/compose/binaries/main/exe/*exe'
-#    - name: Deploy to GitHub Pages
-#      id: deployment
-#      uses: actions/deploy-pages@v4
+    - name: Publish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ github.ref_name }}
+      run: |
+          gh release create "V1.0.1-Alpha" \
+              --repo="${{ github.workspace }}/build/compose/binaries/main/exe/*exe" \
+              --title="${GITHUB_REPOSITORY#*/} V1.0.1-Alpha" \
+              --generate-notes
 
