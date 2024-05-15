@@ -61,11 +61,11 @@ jobs:
     - name: Assemble The Project
       run: ./gradlew packageExe
 
-    - uses: "${{ github.workspace }}/build/compose/binaries/main/exe/"
+    - name: Publish
+      uses: "${{ github.workspace }}/build/compose/binaries/main/exe/"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
         prerelease: false
         files: |
-          LICENSE.txt
           *.exe
 
