@@ -48,7 +48,7 @@ compose.desktop {
             }
             includeAllModules = true
             packageName = "RadioBrowser"
-            packageVersion = "1.0.1-alpha"
+            packageVersion = "1.0.1"
         }
     }
 }

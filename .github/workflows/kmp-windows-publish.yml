@@ -66,8 +66,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ github.ref_name }}
       run: |
-          gh release create "V1.0.1-Alpha" \
+          gh release create "V1.0.1" \
               --repo="${{ github.workspace }}/build/compose/binaries/main/exe/*exe" \
-              --title="${GITHUB_REPOSITORY#*/} V1.0.1-Alpha" \
+              --title="${GITHUB_REPOSITORY#*/} V1.0.1" \
               --generate-notes
 
