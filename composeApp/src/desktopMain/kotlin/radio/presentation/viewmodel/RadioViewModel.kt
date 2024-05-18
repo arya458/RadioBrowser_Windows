@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.koin.java.KoinJavaComponent
-import player.util.RadioState
+import radio.util.RadioState
 import radio.domain.repository.RadioRepository
 
 class RadioViewModel(private val radio: RadioRepository = KoinJavaComponent.getKoin().get()) {

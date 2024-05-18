@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.koin.java.KoinJavaComponent
 import player.presentation.viewmodel.PlayerViewModel
-import player.util.RadioState
+import radio.util.RadioState
 import radio.presentation.viewmodel.RadioViewModel
 
 

@@ -1,4 +1,4 @@
-package player.util
+package radio.util
 
 sealed class RadioState<T>(
     val data: T? = null,

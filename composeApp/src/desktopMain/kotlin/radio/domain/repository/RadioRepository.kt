@@ -3,7 +3,7 @@ package radio.domain.repository
 import de.sfuhrm.radiobrowser4j.AdvancedSearch
 import de.sfuhrm.radiobrowser4j.Station
 import kotlinx.coroutines.flow.Flow
-import player.util.RadioState
+import radio.util.RadioState
 
 interface RadioRepository {
 

@@ -8,7 +8,7 @@ import de.sfuhrm.radiobrowser4j.RadioBrowser
 import de.sfuhrm.radiobrowser4j.Station
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import player.util.RadioState
+import radio.util.RadioState
 
 class RadioImpl : RadioRepository {
 
