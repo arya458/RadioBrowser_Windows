@@ -10,6 +10,8 @@ version = "1.0-SNAPSHOT"
 
 
 kotlin {
+    val koin_version = "3.2.0"
+
     jvm {
         jvmToolchain(11)
         withJava()
