@@ -61,12 +61,12 @@ jobs:
     - name: Assemble The Project
       run: ./gradlew packageExe
 
-#    - uses: "marvinpinto/action-automatic-releases@latest"
-#      with:
-#          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-#          automatic_release_tag: "latest"
-#          prerelease: true
-#          title: "Development Build"
-#          files: |
-#            ${{ github.workspace }}/build/compose/binaries/main/exe/*.exe
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: |
+            ${{ github.workspace }}/build/compose/binaries/main/exe/*.exe
 

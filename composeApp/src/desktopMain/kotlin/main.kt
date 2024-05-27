@@ -11,7 +11,7 @@ fun main() = application {
     val icon = painterResource("drawable/icon.png")
 
 
-//    StreamPlayer()
+
     startKoin {
         modules(RadioModule)
         modules(PlayerModule)

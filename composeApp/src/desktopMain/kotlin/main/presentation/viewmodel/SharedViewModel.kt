@@ -1,4 +1,4 @@
-package main.presentation.viewmodel
+package player.presentation.viewmodel
 
 import de.sfuhrm.radiobrowser4j.Station
 import kotlinx.coroutines.*

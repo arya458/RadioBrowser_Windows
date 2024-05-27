@@ -27,7 +27,6 @@ kotlin {
 //            implementation("io.insert-koin:koin-core-coroutines:$koin_version")
 //            implementation("io.insert-koin:koin-compose:$koin_version")
             implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
-            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.7.0-alpha03")
 
 
         }
@@ -47,9 +46,10 @@ compose.desktop {
                 iconFile.set(project.file("src/commonMain/composeResources/drawable/icon.ico"))
                 shortcut = true
             }
+            appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
             includeAllModules = true
             packageName = "RadioBrowser"
-            packageVersion = "1.0.1"
+            packageVersion = "1.0.2"
         }
     }
 }
