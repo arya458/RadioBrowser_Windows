@@ -1,7 +1,9 @@
 package player.data.repository
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import player.domain.repository.PlayerRepository
 import player.util.PlayerState
 import java.io.File
@@ -44,9 +46,11 @@ class PlayerImpl : PlayerRepository {
         stop()
         try {
             val command = listOf(playerPath, "-url", url, "-volume", "100")
-            process = ProcessBuilder(command)
-                .directory(File(System.getProperty("user.dir")))
-                .start()
+            process = withContext(Dispatchers.IO) {
+                ProcessBuilder(command)
+                    .directory(File(System.getProperty("user.dir")))
+                    .start()
+            }
         } catch (e: IOException) {
             throw RuntimeException("Failed to start player: ${e.message}")
         }

@@ -7,11 +7,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import kotlinx.serialization.json.Json
 import io.ktor.client.plugins.timeout
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.net.UnknownHostException
@@ -19,26 +15,38 @@ import java.net.InetAddress
 import java.net.Socket
 import javax.net.ssl.SSLHandshakeException
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.serialization.Serializable
+import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpRequestRetry.Configuration
+import io.ktor.client.statement.*
+import kotlinx.coroutines.*
+import kotlinx.serialization.json.*
+import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration.Companion.seconds
 
 class RadioBrowserApi {
     private val logger = LoggerFactory.getLogger(RadioBrowserApi::class.java)
-    private var baseUrl: String? = null
-    private var availableMirrors: List<MirrorInfo> = emptyList()
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
                 isLenient = true
                 ignoreUnknownKeys = true
+                coerceInputValues = true
             })
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 5000
-            connectTimeoutMillis = 5000
-            socketTimeoutMillis = 5000
+            requestTimeoutMillis = 10000
+            connectTimeoutMillis = 10000
+            socketTimeoutMillis = 10000
         }
         install(DefaultRequest) {
             header("User-Agent", "RadioBrowser-Windows/1.0")
+        }
+        install(HttpRequestRetry) {
+            maxRetries = 3
+            retryOnServerErrors()
+            retryOnException()
         }
     }
 
@@ -50,15 +58,11 @@ class RadioBrowserApi {
         val statusCode: Int? = null
     )
 
-    data class ServerInfo(
-        val ip: String,
-        val name: String
-    )
-
+    @Serializable
     data class ServerStatus(
         val url: String,
         val ip: String,
-        val name: String?,
+        val name: String? = null,
         val isAvailable: Boolean,
         val responseTime: Long,
         val error: String? = null,
@@ -66,198 +70,137 @@ class RadioBrowserApi {
         val lastChecked: Long = System.currentTimeMillis()
     )
 
-    // Updated list of known mirrors with only IPv4 addresses
-    private val knownMirrors = listOf(
-        "162.55.180.156",  // CleanIp
-        "95.179.139.106",  // nl1
-        "89.58.16.19",     // at1
-        "188.68.62.16"     // de1
-    )
+    private val baseUrl = AtomicReference<String>("")
+    private var availableMirrors: List<MirrorInfo> = emptyList()
+    private val serverStatuses = mutableListOf<ServerStatus>()
+    private val serverStatusesLock = Any()
 
-    private var serverStatuses: List<ServerStatus> = emptyList()
+    init {
+        // Initialize with a default mirror
+        baseUrl.set("http://all.api.radio-browser.info")
+    }
 
-    private suspend fun testServerConnection(host: String, port: Int = 443): Boolean {
+    private suspend fun testServerConnection(host: String, port: Int = 80): Boolean {
         return try {
-            val socket = Socket()
-            val address = InetAddress.getByName(host)
-            socket.connect(java.net.InetSocketAddress(address, port), 5000)
-            socket.close()
-            true
+            withTimeout(5.seconds) {
+                val socket = Socket()
+                val address = InetAddress.getByName(host)
+                socket.connect(java.net.InetSocketAddress(address, port), 5000)
+                socket.close()
+                true
+            }
         } catch (e: Exception) {
             logger.debug("Connection test failed for $host: ${e.message}")
             false
         }
     }
 
-    private fun formatUrl(ip: String): String {
-        return if (ip.contains(":")) {
-            // IPv6 address
-            "https://[$ip]"
-        } else {
-            // IPv4 address
-            "https://$ip"
-        }
-    }
-
     private suspend fun getAvailableServers(): List<String> {
-        return try {
-            // First try to get servers from the API
-            logger.info("Fetching server list from API...")
-            val servers = client.get("https://162.55.180.156/json/servers").body<List<ServerInfo>>()
-            
-            if (servers.isNotEmpty()) {
-                logger.info("Found ${servers.size} servers from API")
-                return servers.map { formatUrl(it.ip) }
-            }
+        val mirrors = listOf(
+            "all.api.radio-browser.info",
+            "de1.api.radio-browser.info",
+            "nl1.api.radio-browser.info",
+            "fr1.api.radio-browser.info",
+            "uk1.api.radio-browser.info",
+            "us1.api.radio-browser.info",
+            "at1.api.radio-browser.info",
+            "ch1.api.radio-browser.info",
+            "es1.api.radio-browser.info",
+            "pl1.api.radio-browser.info",
+            "ie1.api.radio-browser.info",
+            "br1.api.radio-browser.info",
+            "fi1.api.radio-browser.info",
+            "ru1.api.radio-browser.info",
+            "ua1.api.radio-browser.info",
+            "cz1.api.radio-browser.info",
+            "sk1.api.radio-browser.info",
+            "jp1.api.radio-browser.info",
+            "kr1.api.radio-browser.info",
+            "cn1.api.radio-browser.info",
+            "162.55.180.156"  // CleanIp
+        )
 
-            // If API call fails, try known mirrors
-            logger.info("API call failed, trying known mirrors...")
-            val responsiveMirrors = knownMirrors.filter { ip ->
-                val isAvailable = testServerConnection(ip)
-                if (isAvailable) {
-                    logger.info("Direct connection successful to $ip")
-                } else {
-                    logger.debug("Direct connection failed to $ip")
-                }
-                isAvailable
-            }
+        val availableMirrors = mutableListOf<String>()
+        val jobs = mutableListOf<Job>()
 
-            if (responsiveMirrors.isNotEmpty()) {
-                logger.info("Found ${responsiveMirrors.size} responsive mirrors")
-                return responsiveMirrors.map { formatUrl(it) }
-            }
-
-            // If no mirrors work, try DNS lookup
-            logger.info("No mirrors responsive, trying DNS lookup...")
-            val addresses = InetAddress.getAllByName("all.api.radio-browser.info")
-            logger.info("Found ${addresses.size} available servers")
-            
-            addresses.map { address ->
+        mirrors.forEach { mirror ->
+            val job = CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    address.hostAddress
-                } catch (e: Exception) {
-                    logger.warn("Failed to get IP for ${address.hostAddress}: ${e.message}")
-                    null
-                }
-            }.filterNotNull().map { formatUrl(it) }
-        } catch (e: Exception) {
-            logger.error("Failed to get available servers: ${e.message}")
-            // Return all known mirrors as fallback
-            logger.info("Using all known mirrors as fallback")
-            knownMirrors.map { formatUrl(it) }
-        }
-    }
-
-    private suspend fun checkMirrorAvailability(mirror: String): MirrorInfo {
-        return try {
-            // First try DNS resolution
-            val host = URL(mirror).host
-            try {
-                InetAddress.getAllByName(host)
-            } catch (e: UnknownHostException) {
-                logger.error("DNS resolution failed for $mirror: ${e.message}")
-                return MirrorInfo(mirror, Long.MAX_VALUE, false, "DNS resolution failed: ${e.message}")
-            }
-
-            // Then try HTTP request
-            val startTime = System.currentTimeMillis()
-            val response = client.get("$mirror/json/stats")
-            val endTime = System.currentTimeMillis()
-            val responseTime = endTime - startTime
-            
-            if (response.status.isSuccess()) {
-                logger.info("Mirror $mirror responded in ${responseTime}ms with status ${response.status}")
-                MirrorInfo(mirror, responseTime, true, null, response.status.value)
-            } else {
-                val errorMsg = "Status: ${response.status}"
-                logger.error("Mirror $mirror returned status ${response.status}")
-                MirrorInfo(mirror, Long.MAX_VALUE, false, errorMsg, response.status.value)
-            }
-        } catch (e: Exception) {
-            val errorMessage = when (e) {
-                is HttpRequestTimeoutException -> "Timeout after 5000ms"
-                is ClientRequestException -> "Request failed: ${e.message}"
-                is UnknownHostException -> "DNS resolution failed: ${e.message}"
-                is SSLHandshakeException -> "SSL handshake failed: ${e.message}"
-                else -> "Error: ${e.javaClass.simpleName} - ${e.message}"
-            }
-            logger.error("Mirror $mirror failed: $errorMessage")
-            MirrorInfo(mirror, Long.MAX_VALUE, false, errorMessage)
-        }
-    }
-
-    private suspend fun findFastestMirror(): String {
-        val mirrors = getAvailableServers()
-        logger.info("Checking ${mirrors.size} available mirrors")
-
-        return coroutineScope {
-            val results = mirrors.map { mirror ->
-                async {
-                    // Try up to 3 times with delay between attempts
-                    var result: MirrorInfo? = null
-                    for (attempt in 1..3) {
-                        if (attempt > 1) {
-                            delay(500.milliseconds)
-                        }
-                        result = checkMirrorAvailability(mirror)
-                        if (result.isAvailable) break
+                    val ip = java.net.InetAddress.getByName(mirror).hostAddress
+                    if (testServerConnection(ip)) {
+                        availableMirrors.add(mirror)
                     }
-                    result ?: MirrorInfo(mirror, Long.MAX_VALUE, false, "All attempts failed")
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
-            availableMirrors = results.map { it.await() }
-            
-            // Update server statuses
-            serverStatuses = availableMirrors.map { mirror ->
-                ServerStatus(
-                    url = mirror.url,
-                    ip = URL(mirror.url).host,
-                    name = null, // We'll update this when we get server info
-                    isAvailable = mirror.isAvailable,
-                    responseTime = mirror.responseTime,
-                    error = mirror.error,
-                    statusCode = mirror.statusCode
-                )
-            }
-
-            // Try to find the fastest available mirror
-            val fastestMirror = availableMirrors
-                .filter { it.isAvailable }
-                .minByOrNull { it.responseTime }
-                ?.url
-
-            if (fastestMirror != null) {
-                logger.info("Selected fastest mirror: $fastestMirror")
-                return@coroutineScope fastestMirror
-            }
-
-            // If no mirrors are available, try the main API
-            logger.warn("No mirrors available, trying main API")
-            try {
-                val mainApi = "https://all.api.radio-browser.info"
-                val result = checkMirrorAvailability(mainApi)
-                if (result.isAvailable) {
-                    logger.info("Main API is available")
-                    return@coroutineScope mainApi
-                }
-            } catch (e: Exception) {
-                logger.error("Main API failed: ${e.message}")
-            }
-
-            // If still no mirror is available, use the first one as fallback
-            val fallbackMirror = mirrors.first()
-            logger.warn("Using fallback mirror: $fallbackMirror")
-            fallbackMirror
+            jobs.add(job)
         }
+
+        jobs.joinAll()
+        return availableMirrors
+    }
+
+    private suspend fun findFastestMirror(mirrors: List<String>): String? {
+        val jobs = mirrors.map { mirror ->
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val startTime = System.currentTimeMillis()
+                    val response = client.get("http://$mirror/json/stations/search?limit=1")
+                    val endTime = System.currentTimeMillis()
+                    val responseTime = endTime - startTime
+
+                    synchronized(serverStatusesLock) {
+                        serverStatuses.add(
+                            ServerStatus(
+                                url = "http://$mirror",
+                                ip = java.net.InetAddress.getByName(mirror).hostAddress,
+                                isAvailable = response.status.isSuccess(),
+                                responseTime = responseTime,
+                                error = null,
+                                lastChecked = System.currentTimeMillis()
+                            )
+                        )
+                    }
+                } catch (e: Exception) {
+                    synchronized(serverStatusesLock) {
+                        serverStatuses.add(
+                            ServerStatus(
+                                url = "http://$mirror",
+                                ip = "",
+                                isAvailable = false,
+                                responseTime = 0,
+                                error = e.message,
+                                lastChecked = System.currentTimeMillis()
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        jobs.joinAll()
+        return serverStatuses
+            .filter { it.isAvailable }
+            .minByOrNull { it.responseTime }
+            ?.url
     }
 
     fun getAvailableMirrors(): List<MirrorInfo> = availableMirrors
 
-    fun getServerStatuses(): List<ServerStatus> = serverStatuses
+    fun getServerStatuses(): List<ServerStatus> {
+        return synchronized(serverStatusesLock) {
+            serverStatuses.toList()
+        }
+    }
 
     private suspend fun ensureBaseUrl() {
-        if (baseUrl == null) {
-            baseUrl = findFastestMirror()
+        if (baseUrl.get().isEmpty()) {
+            val mirrors = getAvailableServers()
+            val fastestMirror = findFastestMirror(mirrors)
+            if (fastestMirror != null) {
+                baseUrl.set(fastestMirror)
+            }
         }
     }
 
@@ -281,15 +224,47 @@ class RadioBrowserApi {
         throw lastException ?: Exception("Unknown error")
     }
 
-    suspend fun searchStations(query: String): List<RadioStation> = coroutineScope {
-        ensureBaseUrl()
-        makeRequestWithRetry("$baseUrl/json/stations/search") {
-            client.get("$baseUrl/json/stations/search") {
-                url {
-                    parameters.append("name", query)
-                    parameters.append("limit", "100")
+    suspend fun searchStations(query: String, limit: Int = 50): List<RadioStation> {
+        val mirror = baseUrl.get()
+        val url = "$mirror/json/stations/search?name=$query&limit=$limit"
+        
+        return try {
+            val response = client.get(url)
+            if (response.status.isSuccess()) {
+                val json = response.bodyAsText()
+                // Parse the JSON manually to handle the tags field
+                val stations = mutableListOf<RadioStation>()
+                val jsonArray = Json.parseToJsonElement(json).jsonArray
+                
+                for (element in jsonArray) {
+                    val obj = element.jsonObject
+                    val tagsString = obj["tags"]?.jsonPrimitive?.content ?: ""
+                    val tags = if (tagsString.isNotEmpty()) {
+                        tagsString.split(",").map { it.trim() }
+                    } else {
+                        emptyList()
+                    }
+                    
+                    stations.add(RadioStation(
+                        id = obj["id"]?.jsonPrimitive?.content ?: "",
+                        name = obj["name"]?.jsonPrimitive?.content ?: "",
+                        url = obj["url"]?.jsonPrimitive?.content ?: "",
+                        favicon = obj["favicon"]?.jsonPrimitive?.content,
+                        tags = tags,
+                        country = obj["country"]?.jsonPrimitive?.content,
+                        language = obj["language"]?.jsonPrimitive?.content,
+                        votes = obj["votes"]?.jsonPrimitive?.int ?: 0,
+                        codec = obj["codec"]?.jsonPrimitive?.content,
+                        bitrate = obj["bitrate"]?.jsonPrimitive?.int
+                    ))
                 }
-            }.body()
+                stations
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            println("Error searching stations: ${e.message}")
+            emptyList()
         }
     }
 
@@ -351,40 +326,47 @@ class RadioBrowserApi {
     }
 
     suspend fun refreshMirrors() {
-        baseUrl = null
-        ensureBaseUrl()
+        try {
+            val mirrors = getAvailableServers()
+            val fastestMirror = findFastestMirror(mirrors)
+            if (fastestMirror != null) {
+                baseUrl.set(fastestMirror)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class RadioStation(
     val id: String,
     val name: String,
     val url: String,
-    val favicon: String?,
-    val tags: List<String>?,
-    val country: String?,
-    val language: String?,
-    val votes: Int,
-    val codec: String?,
-    val bitrate: Int?
+    val favicon: String? = null,
+    val tags: List<String>? = null,
+    val country: String? = null,
+    val language: String? = null,
+    val votes: Int = 0,
+    val codec: String? = null,
+    val bitrate: Int? = null
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class Country(
     val name: String,
     val iso_3166_1: String,
     val stationcount: Int
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class Language(
     val name: String,
     val iso_639: String,
     val stationcount: Int
 )
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class Tag(
     val name: String,
     val stationcount: Int

@@ -44,13 +44,13 @@ fun RadioPage(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Server Selection
-        ServerSelection(
-            api = api,
-            onServerSelected = {
-                viewModel.refreshMirrors()
-            }
-        )
+//        // Server Selection
+//        ServerSelection(
+//            api = api,
+//            onServerSelected = {
+//                viewModel.refreshMirrors()
+//            }
+//        )
 
         // Search Bar
         OutlinedTextField(

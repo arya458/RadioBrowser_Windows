@@ -3,6 +3,7 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
+    kotlin("plugin.serialization") version "1.9.0"
 }
 
 repositories {
@@ -25,6 +26,12 @@ kotlin {
                 implementation(compose.desktop.currentOs)
                 implementation("ch.qos.logback:logback-classic:1.4.11")
                 implementation("org.slf4j:slf4j-api:2.0.9")
+                implementation("io.ktor:ktor-client-core:2.3.7")
+                implementation("io.ktor:ktor-client-cio:2.3.7")
+                implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+                implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+                implementation("org.slf4j:slf4j-simple:2.0.9")
             }
         }
         val koin_version = "4.0.3"
