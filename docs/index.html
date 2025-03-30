@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="RadioBrowser Windows - A modern desktop application for browsing and streaming radio stations. Built with Kotlin Multiplatform and Compose Desktop.">
+    <meta name="google-site-verification" content="hRsJBUoU1jA6KEGFSo-OCJGlrczQlXEiOtdEFci4lj4" />
     <meta name="keywords" content="radio browser, kotlin, desktop app, radio streaming, compose desktop">
     <meta name="author" content="Aria Danesh">
     <title>RadioBrowser Windows - Modern Radio Streaming App</title>
@@ -26,6 +27,7 @@
             --background-color: #121212;
             --text-color: #ffffff;
             --card-background: #1E1E1E;
+            --footer-background: #1a1a1a;
         }
 
         * {
@@ -222,7 +224,7 @@
         }
 
         footer {
-            background-color: #333;
+            background-color: var(--footer-background);
             color: white;
             padding: 40px 0;
             text-align: center;
@@ -346,19 +348,19 @@
             <h2 class="animate__animated animate__fadeIn">Tech Stack</h2>
             <div class="tech-grid">
                 <div class="tech-item animate__animated animate__fadeInUp">
-                    <i class="fab fa-kotlin tech-icon"></i>
+                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/kotlin/kotlin-original.svg" alt="Kotlin" class="tech-icon" style="width: 48px; height: 48px;">
                     <span>Kotlin</span>
                 </div>
                 <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
-                    <i class="fab fa-java tech-icon"></i>
+                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="Java" class="tech-icon" style="width: 48px; height: 48px;">
                     <span>Java</span>
                 </div>
                 <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
-                    <i class="fas fa-desktop tech-icon"></i>
+                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/android/android-original.svg" alt="Compose Desktop" class="tech-icon" style="width: 48px; height: 48px;">
                     <span>Compose Desktop</span>
                 </div>
                 <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
-                    <i class="fas fa-database tech-icon"></i>
+                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/sqlite/sqlite-original.svg" alt="SQLite" class="tech-icon" style="width: 48px; height: 48px;">
                     <span>SQLite</span>
                 </div>
             </div>
@@ -415,11 +417,8 @@
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
-        // Check for saved theme preference
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            setTheme(savedTheme === 'dark');
-        }
+        // Set dark theme by default
+        setTheme(true);
 
         themeToggle.addEventListener('click', () => {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
