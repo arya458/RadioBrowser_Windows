@@ -5,11 +5,29 @@ plugins {
     alias(libs.plugins.jetbrainsCompose)
 }
 
+repositories {
+    mavenCentral()
+    google()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    maven("https://jitpack.io")
+}
+
 kotlin {
-    jvm("desktop")
+    jvm("desktop") {
+        compilations.all {
+            kotlinOptions.jvmTarget = "17"
+        }
+    }
+    
     sourceSets {
-        val desktopMain by getting
-        val koin_version = "3.2.0"
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+                implementation("ch.qos.logback:logback-classic:1.4.11")
+                implementation("org.slf4j:slf4j-api:2.0.9")
+            }
+        }
+        val koin_version = "4.0.3"
 
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -18,38 +36,53 @@ kotlin {
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
-            implementation("de.sfuhrm:radiobrowser4j:3.0.0")
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
 
-            implementation("io.insert-koin:koin-core:$koin_version")
+            // Koin
+            implementation(platform("io.insert-koin:koin-bom:$koin_version"))
+            implementation("io.insert-koin:koin-core")
+            implementation("io.insert-koin:koin-core-coroutines")
+            implementation("io.insert-koin:koin-compose")
+            implementation("io.insert-koin:koin-compose-viewmodel")
+            implementation("io.insert-koin:koin-logger-slf4j")
+            
+            // Ktor for HTTP requests
+            implementation("io.ktor:ktor-client-core:2.3.8")
+            implementation("io.ktor:ktor-client-cio:2.3.8")
+            implementation("io.ktor:ktor-client-content-negotiation:2.3.8")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.8")
+            
             api("io.github.qdsfdhvh:image-loader:1.7.8")
             api("io.github.qdsfdhvh:image-loader-extension-moko-resources:1.7.8")
-//            implementation("io.insert-koin:koin-core-coroutines:$koin_version")
-//            implementation("io.insert-koin:koin-compose:$koin_version")
-            implementation("io.insert-koin:koin-logger-slf4j:$koin_version")
-
-
-        }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
         }
     }
 }
 
-
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "main.MainKt"
+        jvmArgs += listOf("-Xmx2G")
+        buildTypes {
+            release {
+                proguard {
+                    configurationFiles.from("compose-desktop.pro")
+                }
+            }
+        }
         nativeDistributions {
             targetFormats(TargetFormat.Exe)
+            packageName = "RadioBrowser"
+            packageVersion = "1.0.0"
             windows {
                 iconFile.set(project.file("src/commonMain/composeResources/drawable/icon.ico"))
-                shortcut = true
             }
-            appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
-            includeAllModules = true
-            packageName = "RadioBrowser"
-            packageVersion = "1.0.2"
         }
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs = listOf("-Xjsr305=strict")
     }
 }

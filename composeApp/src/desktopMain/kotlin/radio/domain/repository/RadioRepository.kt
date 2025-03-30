@@ -1,23 +1,16 @@
 package radio.domain.repository
 
-import de.sfuhrm.radiobrowser4j.AdvancedSearch
-import de.sfuhrm.radiobrowser4j.Station
-import kotlinx.coroutines.flow.Flow
-import radio.util.RadioState
+import radio.data.api.RadioStation
+import radio.data.api.Country
+import radio.data.api.Language
+import radio.data.api.Tag
 
 interface RadioRepository {
-
-//    fun endpoint(): String
-//
-//    fun radioBrowser(): RadioBrowser
-
-    fun getListTopVoteStations(limit: Int): Flow<RadioState<List<Station>>>
-
-    fun getListTopClickStations(limit: Int): Flow<RadioState<List<Station>>>
-
-    fun getSearchReasult(search: AdvancedSearch,limit: Int): Flow<RadioState<List<Station>>>
-
-
-
-
+    suspend fun searchStations(query: String): List<RadioStation>
+    suspend fun getStationsByCountry(countryCode: String): List<RadioStation>
+    suspend fun getStationsByLanguage(language: String): List<RadioStation>
+    suspend fun getStationsByTag(tag: String): List<RadioStation>
+    suspend fun getCountries(): List<Country>
+    suspend fun getLanguages(): List<Language>
+    suspend fun getTags(): List<Tag>
 }

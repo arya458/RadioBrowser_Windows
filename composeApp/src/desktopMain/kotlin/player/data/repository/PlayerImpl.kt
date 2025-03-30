@@ -1,64 +1,77 @@
 package player.data.repository
 
-import player.domain.repository.PlayerRepository
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
+import player.domain.repository.PlayerRepository
 import player.util.PlayerState
 import java.io.File
+import java.io.IOException
 
-class PlayerImpl: PlayerRepository {
-    private var runtime: Runtime = Runtime.getRuntime()
-    private var playerDir: File? =null
+class PlayerImpl : PlayerRepository {
+    private var process: Process? = null
+    private var playerPath = "StreamPlayer/streamplayer"
 
-    init {
-        println("PlayerImpl Created")
-    }
-    override fun setPlayerDir(playerEXE: String): Flow<PlayerState<String>> {
-        return flow<PlayerState<String>> {
-
-            emit(PlayerState.Empty())
-            try {
-                playerDir = File(playerEXE)
-                emit(PlayerState.Ready(playerEXE))
-            }catch (e:Exception){
-                emit(PlayerState.Error(e.message.toString()))
+    override fun setPlayerDir(playerEXE: String): Flow<PlayerState<String>> = flow {
+        emit(PlayerState.Loading<String>())
+        try {
+            playerPath = playerEXE
+            val file = File(playerPath)
+            if (file.exists() && file.canExecute()) {
+                emit(PlayerState.Success(playerPath))
+            } else {
+                emit(PlayerState.Error("Player executable not found or not executable"))
             }
+        } catch (e: Exception) {
+            emit(PlayerState.Error(e.message ?: "Unknown error"))
         }
     }
 
-    override fun checkPlayerDefaultPath(): Flow<PlayerState<String>> {
-        val defPath = "C:\\Program Files (x86)\\K-Lite Codec Pack\\MPC-HC64\\mpc-hc64.exe"
-
-        return flow<PlayerState<String>> {
-            emit(PlayerState.Empty())
-            try {
-                val def = File(defPath)
-                if (def.exists() && def.isFile){
-                    playerDir = File(defPath)
-                    emit(PlayerState.Ready(defPath))
-                }
-            } catch (e: Exception) {
-                println(e.message)
+    override fun checkPlayerDefaultPath(): Flow<PlayerState<String>> = flow {
+        emit(PlayerState.Loading<String>())
+        try {
+            val file = File(playerPath)
+            if (file.exists() && file.canExecute()) {
+                emit(PlayerState.Success(playerPath))
+            } else {
+                emit(PlayerState.Error("Default player executable not found"))
             }
+        } catch (e: Exception) {
+            emit(PlayerState.Error(e.message ?: "Unknown error"))
         }
     }
 
-
-    override fun play(link: String): Process? {
-//        return runtime.exec("${playerDir?.path} $link")
-        return runtime.exec("${playerDir?.path} $link /slave \"hWnd\" /nocrashreporter")
-
+    override suspend fun play(url: String) {
+        stop()
+        try {
+            val command = listOf(playerPath, "-url", url, "-volume", "100")
+            process = ProcessBuilder(command)
+                .directory(File(System.getProperty("user.dir")))
+                .start()
+        } catch (e: IOException) {
+            throw RuntimeException("Failed to start player: ${e.message}")
+        }
     }
 
+    override suspend fun stop() {
+        process?.destroyForcibly()?.waitFor()
+        process = null
+    }
 
+    override suspend fun pause() {
+        process?.destroyForcibly()?.waitFor()
+        process = null
+    }
+
+    override suspend fun resume() {
+        process?.let { p ->
+            if (!p.isAlive) {
+                throw RuntimeException("Player process is not running")
+            }
+        } ?: throw RuntimeException("No active player process")
+    }
 
     override fun shutdown() {
-        println("Player.Player Cancelled")
-        runtime.addShutdownHook(Thread("Cancelled"))
+        process?.destroyForcibly()?.waitFor()
+        process = null
     }
-
-
 }

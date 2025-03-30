@@ -1,60 +1,159 @@
 package radio.presentation.viewmodel
 
-import de.sfuhrm.radiobrowser4j.AdvancedSearch
-import de.sfuhrm.radiobrowser4j.FieldName
-import de.sfuhrm.radiobrowser4j.Station
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import org.koin.java.KoinJavaComponent
-import radio.util.RadioState
+import radio.data.api.RadioStation
+import radio.data.api.Country
+import radio.data.api.Language
+import radio.data.api.Tag
 import radio.domain.repository.RadioRepository
+import radio.data.api.RadioBrowserApi
 
-class RadioViewModel(private val radio: RadioRepository = KoinJavaComponent.getKoin().get()) {
+class RadioViewModel(
+    private val repository: RadioRepository,
+    private val api: RadioBrowserApi,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+) {
+    private val _stations = MutableStateFlow<List<RadioStation>>(emptyList())
+    val stations: StateFlow<List<RadioStation>> = _stations.asStateFlow()
 
-    private val scope = CoroutineScope(Dispatchers.IO)
-    private val searchBuilder = AdvancedSearch.builder()
-    private val limit = 50
+    private val _countries = MutableStateFlow<List<Country>>(emptyList())
+    val countries: StateFlow<List<Country>> = _countries.asStateFlow()
 
-    private val _radioState: MutableStateFlow<RadioState<List<Station>>> = MutableStateFlow(RadioState.Loading())
-    val radioState: StateFlow<RadioState<List<Station>>> = _radioState
+    private val _languages = MutableStateFlow<List<Language>>(emptyList())
+    val languages: StateFlow<List<Language>> = _languages.asStateFlow()
 
+    private val _tags = MutableStateFlow<List<Tag>>(emptyList())
+    val tags: StateFlow<List<Tag>> = _tags.asStateFlow()
 
-    init {
-        getRadioTopVoteStations()
-    }
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun getRadioTopClickStations() {
-        scope.launch {
-            radio.getListTopClickStations(limit).collectLatest {
-                _radioState.value = it
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
+    fun searchStations(query: String) {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _stations.value = repository.searchStations(query)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _stations.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
-    fun getRadioTopVoteStations() {
-        scope.launch {
-            radio.getListTopVoteStations(limit).collectLatest {
-                _radioState.value = it
+
+    fun getStationsByCountry(countryCode: String) {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _stations.value = repository.getStationsByCountry(countryCode)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _stations.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
-    private fun getSearchReasult(search: AdvancedSearch) {
-        scope.launch {
-            radio.getSearchReasult(search,limit).collectLatest {
-                _radioState.value = it
+
+    fun getStationsByLanguage(language: String) {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _stations.value = repository.getStationsByLanguage(language)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _stations.value = emptyList()
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
-    fun search(name:String){
-        getSearchReasult(searchBuilder
-            .name(name)
-            .order(FieldName.VOTES)
-            .build())
+    fun getStationsByTag(tag: String) {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _stations.value = repository.getStationsByTag(tag)
+            } catch (e: Exception) {
+                _error.value = e.message
+                _stations.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 
+    fun loadCountries() {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _countries.value = repository.getCountries()
+            } catch (e: Exception) {
+                _error.value = e.message
+                _countries.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
+    fun loadLanguages() {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _languages.value = repository.getLanguages()
+            } catch (e: Exception) {
+                _error.value = e.message
+                _languages.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun loadTags() {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _tags.value = repository.getTags()
+            } catch (e: Exception) {
+                _error.value = e.message
+                _tags.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun refreshMirrors() {
+        coroutineScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                api.refreshMirrors()
+                // Refresh the current search
+                searchStations("")
+            } catch (e: Exception) {
+                _error.value = e.message
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 }

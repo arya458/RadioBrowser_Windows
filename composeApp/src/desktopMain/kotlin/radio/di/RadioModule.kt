@@ -2,6 +2,7 @@ package radio.di
 
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.createdAtStart
+import radio.data.api.RadioBrowserApi
 import radio.data.repository.RadioImpl
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
@@ -14,6 +15,10 @@ import radio.presentation.viewmodel.RadioViewModel
 
 val RadioModule = module {
 
+    single { RadioBrowserApi() }
+
+    single<RadioRepository> { RadioImpl(get()) }
+
     singleOf(::RadioImpl) withOptions {
         // definition options
         named("radioRepository")
@@ -21,13 +26,8 @@ val RadioModule = module {
         createdAtStart()
     }
 
-
-    single<RadioViewModel>{
-        RadioViewModel()
-    } withOptions {
-        // definition options
-        named("radioViewModel")
-        createdAtStart()
+    single {
+        RadioViewModel(get<RadioRepository>(), get<RadioBrowserApi>())
     }
 
 }

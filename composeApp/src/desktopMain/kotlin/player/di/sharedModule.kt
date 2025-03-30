@@ -10,34 +10,13 @@ import org.koin.dsl.module
 import player.domain.repository.PlayerRepository
 import player.presentation.viewmodel.PlayerViewModel
 
-
-val PlayerModule = module(createdAtStart=true) {
-
-//    single<PlayerRepository>(named("playerRepository")) {
-//        PlayerImpl()
-//    }
-
+val PlayerModule = module(createdAtStart = true) {
     singleOf(::PlayerImpl) withOptions {
-        // definition options
-        named("playerRepository")
         bind<PlayerRepository>()
         createdAtStart()
     }
 
-
-    single<PlayerViewModel>{
-        PlayerViewModel()
-    } withOptions {
-        // definition options
-        named("playerViewModel")
-        createdAtStart()
+    single {
+        PlayerViewModel(get<PlayerRepository>())
     }
-
-
-
-
-//    single<PlayerRepository> { PlayerImpl() as PlayerRepository } withOptions {
-//        named("playerRepository")
-//        createdAtStart()
-//    }
 }

@@ -9,7 +9,13 @@ interface PlayerRepository {
 
     fun checkPlayerDefaultPath(): Flow<PlayerState<String>>
 
-    fun play(link: String): Process?
+    suspend fun play(url: String)
+
+    suspend fun stop()
+
+    suspend fun pause()
+
+    suspend fun resume()
 
     fun shutdown()
 

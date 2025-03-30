@@ -1,43 +1,18 @@
 package main.di
 
-import org.koin.core.module.dsl.bind
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
-import org.koin.core.module.dsl.withOptions
-import player.data.repository.PlayerImpl
-import org.koin.core.qualifier.named
 import org.koin.dsl.module
+import player.data.repository.PlayerImpl
 import player.domain.repository.PlayerRepository
 import player.presentation.viewmodel.PlayerViewModel
+import radio.data.api.RadioBrowserApi
+import radio.data.repository.RadioImpl
+import radio.domain.repository.RadioRepository
+import radio.presentation.viewmodel.RadioViewModel
 
-
-val SharedModule = module(createdAtStart=true) {
-
-//    single<PlayerRepository>(named("playerRepository")) {
-//        PlayerImpl()
-//    }
-
-    singleOf(::PlayerImpl) withOptions {
-        // definition options
-        named("playerRepository")
-        bind<PlayerRepository>()
-        createdAtStart()
-    }
-
-
-    single<PlayerViewModel>{
-        PlayerViewModel()
-    } withOptions {
-        // definition options
-        named("playerViewModel")
-        createdAtStart()
-    }
-
-
-
-
-//    single<PlayerRepository> { PlayerImpl() as PlayerRepository } withOptions {
-//        named("playerRepository")
-//        createdAtStart()
-//    }
+val sharedModule = module {
+    single<PlayerRepository> { PlayerImpl() }
+    single { RadioBrowserApi() }
+    single<RadioRepository> { RadioImpl(get()) }
+    single { PlayerViewModel(get()) }
+    single { RadioViewModel(get(), get()) }
 }

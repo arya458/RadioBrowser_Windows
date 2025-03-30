@@ -1,75 +1,93 @@
 package player.presentation.viewmodel
 
-import de.sfuhrm.radiobrowser4j.Station
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.flow
-import org.koin.java.KoinJavaComponent
+import kotlinx.coroutines.launch
 import player.domain.repository.PlayerRepository
-import player.util.PlayerReadyState
 import player.util.PlayerState
-import java.io.File
+import radio.data.api.RadioStation
 
-class PlayerViewModel(private val player: PlayerRepository = KoinJavaComponent.getKoin().get()) {
-
-    private var lastProcess: Process? = null
-    private var playerScope: Job? = null
-    private val scope = CoroutineScope(Dispatchers.IO)
-
-    private val _playerState: MutableStateFlow<PlayerState<String>> = MutableStateFlow(PlayerState.Empty())
+class PlayerViewModel(
+    private val repository: PlayerRepository,
+    private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Default)
+) {
+    private val _playerState = MutableStateFlow<PlayerState<String>>(PlayerState.Empty())
     val playerState: StateFlow<PlayerState<String>> = _playerState
 
-    private val _playerReadyState: MutableStateFlow<PlayerReadyState<Station>> = MutableStateFlow(PlayerReadyState.Waiting())
-    val playerReadyState: StateFlow<PlayerReadyState<Station>> = _playerReadyState
+    private val _currentStation = MutableStateFlow<RadioStation?>(null)
+    val currentStation: StateFlow<RadioStation?> = _currentStation
 
-    init {
-        checkPlayerDefaultPath()
-    }
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> = _isPlaying
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
 
     fun setPlayerDir(playerEXE: String) {
-        scope.launch {
-            player.setPlayerDir(playerEXE).collectLatest {
-                _playerState.value = it
+        coroutineScope.launch {
+            repository.setPlayerDir(playerEXE).collect { state ->
+                _playerState.value = state
             }
         }
     }
 
-    private fun checkPlayerDefaultPath(){
-        scope.launch {
-            player.checkPlayerDefaultPath().collectLatest {
-                _playerState.value = it
+    fun checkPlayerDefaultPath() {
+        coroutineScope.launch {
+            repository.checkPlayerDefaultPath().collect { state ->
+                _playerState.value = state
             }
         }
     }
 
-    fun play(station : Station) {
-        if (playerScope != null) {
-            lastProcess?.destroyForcibly()?.destroy()
-        }
-        playerScope = scope.launch {
-
-            flow<PlayerReadyState<Station>> {
-                emit(PlayerReadyState.Loading())
-                try {
-                    lastProcess = player.play(station.url)
-                    emit(PlayerReadyState.Playing(station))
-                }catch (e:Exception){
-                    println(e.message)
-                    emit(PlayerReadyState.Error(e.message.toString()))
-                }
-            }.collectLatest {
-                _playerReadyState.value = it
+    fun playStation(station: RadioStation) {
+        coroutineScope.launch {
+            try {
+                _error.value = null
+                _currentStation.value = station
+                repository.play(station.url)
+                _isPlaying.value = true
+            } catch (e: Exception) {
+                _error.value = e.message
+                _isPlaying.value = false
             }
         }
     }
 
-    fun shutdown() {
-        player.shutdown()
-        lastProcess?.destroyForcibly()?.destroy()
-        playerScope?.cancel()
-        scope.cancel()
+    fun stop() {
+        coroutineScope.launch {
+            try {
+                _error.value = null
+                repository.stop()
+                _isPlaying.value = false
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
     }
 
+    fun pause() {
+        coroutineScope.launch {
+            try {
+                _error.value = null
+                repository.pause()
+                _isPlaying.value = false
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
+
+    fun resume() {
+        coroutineScope.launch {
+            try {
+                _error.value = null
+                repository.resume()
+                _isPlaying.value = true
+            } catch (e: Exception) {
+                _error.value = e.message
+            }
+        }
+    }
 }
