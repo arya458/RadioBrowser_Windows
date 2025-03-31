@@ -63,6 +63,8 @@
             justify-content: space-between;
             padding: 0 20px;
             z-index: 1000;
+            backdrop-filter: blur(10px);
+            background-color: rgba(30, 30, 30, 0.8);
         }
 
         .navbar-brand {
@@ -70,6 +72,20 @@
             font-weight: 700;
             color: var(--primary-color);
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar-brand i {
+            font-size: 1.8rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
         }
 
         .theme-toggle {
@@ -80,11 +96,12 @@
             font-size: 1.2rem;
             padding: 8px;
             border-radius: 50%;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .theme-toggle:hover {
             background-color: rgba(0,0,0,0.1);
+            transform: rotate(180deg);
         }
 
         header {
@@ -107,6 +124,12 @@
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,112C672,96,768,96,864,112C960,128,1056,160,1152,160C1248,160,1344,128,1392,112L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
             background-size: cover;
             opacity: 0.1;
+            animation: wave 20s linear infinite;
+        }
+
+        @keyframes wave {
+            0% { background-position: 0 0; }
+            100% { background-position: 1440px 0; }
         }
 
         .hero-content {
@@ -118,6 +141,7 @@
             font-size: 3.5rem;
             margin-bottom: 20px;
             animation: fadeInDown 1s ease-out;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .subtitle {
@@ -139,10 +163,28 @@
             border-radius: 30px;
             text-decoration: none;
             font-weight: 500;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .button:hover::before {
+            transform: translateX(100%);
         }
 
         .button:hover {
@@ -177,7 +219,25 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .feature-card:hover::before {
+            transform: translateX(100%);
         }
 
         .feature-card:hover {
@@ -189,12 +249,36 @@
             font-size: 2.5rem;
             color: var(--primary-color);
             margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.1);
         }
 
         .about-section {
             background-color: var(--card-background);
             padding: 80px 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.05), transparent);
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         .author-info {
@@ -216,11 +300,29 @@
             color: white;
             font-size: 2rem;
             font-weight: bold;
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .author-avatar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.2), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .author-avatar:hover::before {
+            transform: translateX(100%);
         }
 
         .author-avatar:hover {
-            transform: scale(1.1);
+            transform: scale(1.1) rotate(5deg);
         }
 
         footer {
@@ -228,6 +330,8 @@
             color: white;
             padding: 40px 0;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .social-links {
@@ -240,38 +344,59 @@
         .social-link {
             color: white;
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            position: relative;
+        }
+
+        .social-link::before {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--primary-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .social-link:hover::before {
+            transform: scaleX(1);
         }
 
         .social-link:hover {
             color: var(--primary-color);
+            transform: translateY(-2px);
         }
 
-        .tech-stack {
-            padding: 80px 0;
-            text-align: center;
-        }
-
-        .tech-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .tech-item {
+        .scroll-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
 
-        .tech-icon {
-            font-size: 2rem;
-            color: var(--primary-color);
+        .scroll-indicator.visible {
+            opacity: 1;
+        }
+
+        .scroll-indicator:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
         @media (max-width: 768px) {
@@ -285,6 +410,7 @@
             
             .cta-buttons {
                 flex-direction: column;
+                align-items: center;
             }
             
             .features-grid {
@@ -295,73 +421,56 @@
 </head>
 <body>
     <nav class="navbar">
-        <a href="#" class="navbar-brand">RadioBrowser</a>
-        <button class="theme-toggle" id="themeToggle">
+        <a href="#" class="navbar-brand">
+            <i class="fas fa-radio"></i>
+            RadioBrowser
+        </a>
+        <button class="theme-toggle" onclick="toggleTheme()">
             <i class="fas fa-moon"></i>
         </button>
     </nav>
 
     <header>
-        <div class="container">
-            <div class="hero-content">
-                <h1>RadioBrowser Windows</h1>
-                <p class="subtitle">A modern desktop application for browsing and streaming radio stations</p>
-                <div class="cta-buttons">
-                    <a href="https://github.com/arya458/RadioBrowser_Windows" class="button primary-button">
-                        <i class="fab fa-github"></i>
-                        View on GitHub
-                    </a>
-                    <a href="#features" class="button secondary-button">
-                        <i class="fas fa-info-circle"></i>
-                        Learn More
-                    </a>
-                </div>
+        <div class="hero-content">
+            <h1>RadioBrowser Windows</h1>
+            <p class="subtitle">A modern desktop application for browsing and streaming radio stations</p>
+            <div class="cta-buttons">
+                <a href="#download" class="button primary-button">
+                    <i class="fas fa-download"></i>
+                    Download Now
+                </a>
+                <a href="#features" class="button secondary-button">
+                    <i class="fas fa-info-circle"></i>
+                    Learn More
+                </a>
             </div>
         </div>
     </header>
 
-    <section class="features" id="features">
+    <section id="features" class="features">
         <div class="container">
-            <h2 class="animate__animated animate__fadeIn">Features</h2>
+            <h2 class="section-title">Features</h2>
             <div class="features-grid">
-                <div class="feature-card animate__animated animate__fadeInUp">
-                    <div class="feature-icon">🎵</div>
-                    <h3>Stream Radio Stations</h3>
-                    <p>Browse and stream thousands of radio stations from around the world with high-quality audio.</p>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Global Radio Stations</h3>
+                    <p>Access thousands of radio stations from around the world</p>
                 </div>
-                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
-                    <div class="feature-icon">🔍</div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
                     <h3>Smart Search</h3>
-                    <p>Find your favorite stations with advanced search filters for country, language, and tags.</p>
+                    <p>Find your favorite stations with advanced search filters</p>
                 </div>
-                <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.4s">
-                    <div class="feature-icon">⚡</div>
-                    <h3>Fast & Reliable</h3>
-                    <p>Built with Kotlin Multiplatform and Compose Desktop for optimal performance.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="tech-stack">
-        <div class="container">
-            <h2 class="animate__animated animate__fadeIn">Tech Stack</h2>
-            <div class="tech-grid">
-                <div class="tech-item animate__animated animate__fadeInUp">
-                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/kotlin/kotlin-original.svg" alt="Kotlin" class="tech-icon" style="width: 48px; height: 48px;">
-                    <span>Kotlin</span>
-                </div>
-                <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.1s">
-                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/java/java-original.svg" alt="Java" class="tech-icon" style="width: 48px; height: 48px;">
-                    <span>Java</span>
-                </div>
-                <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.2s">
-                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/android/android-original.svg" alt="Compose Desktop" class="tech-icon" style="width: 48px; height: 48px;">
-                    <span>Compose Desktop</span>
-                </div>
-                <div class="tech-item animate__animated animate__fadeInUp" style="animation-delay: 0.3s">
-                    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/sqlite/sqlite-original.svg" alt="SQLite" class="tech-icon" style="width: 48px; height: 48px;">
-                    <span>SQLite</span>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Favorites</h3>
+                    <p>Save and organize your favorite radio stations</p>
                 </div>
             </div>
         </div>
@@ -369,72 +478,81 @@
 
     <section class="about-section">
         <div class="container">
-            <h2 class="animate__animated animate__fadeIn">About the Developer</h2>
-            <div class="author-info animate__animated animate__fadeInUp">
-                <div class="author-avatar">AD</div>
-                <div>
-                    <h3>Aria Danesh</h3>
-                    <p>Software Developer</p>
+            <h2>About the Developer</h2>
+            <div class="author-info">
+                <div class="author-avatar">
+                    <i class="fas fa-user"></i>
                 </div>
-            </div>
-            <div class="social-links">
-                <a href="https://www.linkedin.com/in/aria-danesh-574ab8162/" class="social-link">
-                    <i class="fab fa-linkedin"></i>
-                    LinkedIn
-                </a>
-                <a href="https://github.com/arya458" class="social-link">
-                    <i class="fab fa-github"></i>
-                    GitHub
-                </a>
+                <div class="author-details">
+                    <h3>Aria Danesh</h3>
+                    <p>Passionate developer creating modern desktop applications</p>
+                </div>
             </div>
         </div>
     </section>
 
     <footer>
         <div class="container">
-            <p>© 2024 RadioBrowser Windows. All rights reserved.</p>
+            <p>&copy; 2024 RadioBrowser Windows. All rights reserved.</p>
             <div class="social-links">
-                <a href="https://github.com/arya458/RadioBrowser_Windows" class="social-link">
+                <a href="#" class="social-link">
                     <i class="fab fa-github"></i>
-                    GitHub Repository
+                    GitHub
                 </a>
-                <a href="https://www.linkedin.com/in/aria-danesh-574ab8162/" class="social-link">
-                    <i class="fab fa-linkedin"></i>
-                    LinkedIn Profile
+                <a href="#" class="social-link">
+                    <i class="fab fa-twitter"></i>
+                    Twitter
                 </a>
             </div>
         </div>
     </footer>
 
+    <div class="scroll-indicator" onclick="scrollToTop()">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
     <script>
-        // Theme toggle functionality
-        const themeToggle = document.getElementById('themeToggle');
-        const icon = themeToggle.querySelector('i');
-        
-        function setTheme(isDark) {
-            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            
+            const themeIcon = document.querySelector('.theme-toggle i');
+            themeIcon.className = newTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
         }
 
-        // Set dark theme by default
-        setTheme(true);
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
 
-        themeToggle.addEventListener('click', () => {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            setTheme(!isDark);
+        // Show/hide scroll indicator
+        window.addEventListener('scroll', () => {
+            const scrollIndicator = document.querySelector('.scroll-indicator');
+            if (window.scrollY > 300) {
+                scrollIndicator.classList.add('visible');
+            } else {
+                scrollIndicator.classList.remove('visible');
+            }
         });
 
-        // Add scroll animations
+        // Animate elements on scroll
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('animate__animated', 'animate__fadeIn');
+                    entry.target.classList.add('animate__animated', 'animate__fadeInUp');
                 }
             });
+        }, {
+            threshold: 0.1
         });
 
-        document.querySelectorAll('.feature-card, .author-info, .tech-item').forEach((el) => observer.observe(el));
+        document.querySelectorAll('.feature-card, .section-title').forEach((el) => {
+            observer.observe(el);
+        });
     </script>
 </body>
 </html>
