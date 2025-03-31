@@ -2,6 +2,7 @@ package main
 
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.runtime.Composable
 import di.appModule
 import org.koin.core.context.startKoin
 import org.koin.compose.koinInject
@@ -17,6 +18,11 @@ fun main() = application {
         onCloseRequest = ::exitApplication,
         title = "Radio Browser"
     ) {
-        App()
+        MainContent()
     }
+}
+
+@Composable
+private fun MainContent() {
+    App()
 }

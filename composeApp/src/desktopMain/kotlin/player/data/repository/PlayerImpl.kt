@@ -11,7 +11,7 @@ import java.io.IOException
 
 class PlayerImpl : PlayerRepository {
     private var process: Process? = null
-    private var playerPath = "StreamPlayer/streamplayer"
+    private var playerPath = "C:\\Program Files (x86)\\K-Lite Codec Pack\\MPC-HC64\\mpc-hc64.exe"
 
     override fun setPlayerDir(playerEXE: String): Flow<PlayerState<String>> = flow {
         emit(PlayerState.Loading<String>())
@@ -45,7 +45,7 @@ class PlayerImpl : PlayerRepository {
     override suspend fun play(url: String) {
         stop()
         try {
-            val command = listOf(playerPath, "-url", url, "-volume", "100")
+            val command = listOf(playerPath, "/play ", url)
             process = withContext(Dispatchers.IO) {
                 ProcessBuilder(command)
                     .directory(File(System.getProperty("user.dir")))

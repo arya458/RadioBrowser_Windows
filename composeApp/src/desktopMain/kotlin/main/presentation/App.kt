@@ -15,12 +15,14 @@ import radio.presentation.Page.RadioPage
 import player.presentation.viewmodel.PlayerViewModel
 import player.presentation.compose.SetupPlayer
 import radio.presentation.viewmodel.RadioViewModel
+import main.presentation.compose.LoadingPage
 
 @Composable
 fun App() {
     val radioViewModel: RadioViewModel = koinInject()
     val playerViewModel: PlayerViewModel = koinInject()
     val playerState by playerViewModel.playerState.collectAsState()
+    var isSetupComplete by remember { mutableStateOf(false) }
 
     MaterialTheme(
         colors = MaterialTheme.colors.copy(
@@ -119,7 +121,7 @@ fun App() {
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically()
             ) {
-                if (playerState == null) {
+                if (!isSetupComplete) {
                     Card(
                         modifier = Modifier
                             .fillMaxSize()
@@ -127,7 +129,10 @@ fun App() {
                         elevation = 8.dp,
                         backgroundColor = MaterialTheme.colors.surface
                     ) {
-                        SetupPlayer(playerViewModel)
+                        LoadingPage(
+                            onSetupComplete = { isSetupComplete = true },
+                            playerViewModel = playerViewModel
+                        )
                     }
                 } else {
                     Card(
