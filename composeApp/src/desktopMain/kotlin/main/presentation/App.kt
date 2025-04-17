@@ -21,7 +21,7 @@ import main.presentation.compose.LoadingPage
 fun App() {
     val radioViewModel: RadioViewModel = koinInject()
     val playerViewModel: PlayerViewModel = koinInject()
-    val playerState by playerViewModel.playerState.collectAsState()
+//    val playerState by playerViewModel.playerState.collectAsState()
     var isSetupComplete by remember { mutableStateOf(false) }
 
     MaterialTheme(
